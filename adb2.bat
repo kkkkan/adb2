@@ -77,6 +77,9 @@ for /f "usebackq" %%a in (`adb devices`) do (
     @rem
     @rem "()ブロックの中で動的にecho on / offの切り替えは展開のタイミング関係で?無理そうだったので表示したいものだけ直にecho"
     @rem
+    echo 実行対象の機種名
+    adb -s %%a shell getprop ro.product.model
+    echo 実行コマンド
     echo adb -s %%a %1 %2 %3 %4 %5 %6 %7 %8 %9
     adb -s %%a %1 %2 %3 %4 %5 %6 %7 %8 %9
   )
