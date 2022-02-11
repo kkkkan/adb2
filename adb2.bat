@@ -61,8 +61,30 @@ if %TRUE_FALSE%==TRUE (
 )
 
 
+@rem "オリジナル コマンド"
+@rem "adb2 show"
+@rem "接続されている端末のシリアル番号と機種名を一覧表示する"
+@rem "本家のadbにはshowコマンドはないのでOK"
 
+if "%1"=="show" (
+  echo 接続されている端末一覧
+  @rem "改行"
+  echo;
+  for /f "usebackq" %%a in (`adb devices`) do (
+    if not %%a==List (
+      @rem "1行目はList of devices attached なので、%%a==Listは除外"
+      @rem
+      @rem "表示に使うための空白文字を変数に入れておく。"
+      set space= 
 
+      for /f "usebackq" %%b in (`adb -s %%a shell getprop ro.product.model`) do (
+        @rem "a1b2c3d4e56 : CPH1983 のような表示"
+        echo %%a%space%:%space%%%b
+      )
+    )
+  )
+  exit /b
+)
 
 
 @rem "adb devicesを実行して、接続されているデバイスを取得して1台ずつ実行する"
