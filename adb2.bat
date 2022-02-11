@@ -104,6 +104,8 @@ for /f "usebackq" %%a in (`adb devices`) do (
     echo 実行コマンド
     echo adb -s %%a %1 %2 %3 %4 %5 %6 %7 %8 %9
     adb -s %%a %1 %2 %3 %4 %5 %6 %7 %8 %9
+    @rem "改行"
+    echo;
   )
 )
 
