@@ -91,8 +91,8 @@ if "%1"=="show" (
 @rem "deviceのidは各行の1つ目"
 for /f "usebackq" %%a in (`adb devices`) do (
 
-@rem "batファイルは()ブロック内の環境変数展開のタイミングが()に入った瞬間なので、"
-@rem "()内で%%aを一度変数に入れるとうまく動かないので注意"
+  @rem "batファイルは()ブロック内の環境変数展開のタイミングが()に入った瞬間なので、"
+  @rem "()内で%%aを一度変数に入れるとうまく動かないので注意"
 
   if not %%a==List (
     @rem "1行目はList of devices attached なので、%%a==Listは除外"
