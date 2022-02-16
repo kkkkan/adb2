@@ -77,7 +77,9 @@ if "%1"=="show" (
       @rem "表示に使うための空白文字を変数に入れておく。"
       set space= 
 
-      for /f "usebackq" %%b in (`adb -s %%a shell getprop ro.product.model`) do (
+      @rem "tokens=*　とすると、 「Android SDK built for x86」のように空白文字を含む端末名の時でも"
+      @rem "出力結果のすべてを一つの変数に入れてくれる。"
+      for /f "usebackq tokens=*" %%b in (`adb -s %%a shell getprop ro.product.model`) do (
         @rem "a1b2c3d4e56 : CPH1983 のような表示"
         echo %%a%space%:%space%%%b
       )
