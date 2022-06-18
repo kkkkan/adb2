@@ -1,0 +1,141 @@
+#!/bin/bash
+
+# macOS用adb2コマンド
+# 動作確認環境
+# OS : macOS 12.2.1 (21D62)
+# チップ : Apple M1
+
+# 引数の数を変数に入れておく
+ARG_NUM=$#
+
+#echo $ARG_NUM
+
+# 非対応のadbコマンド引数
+# 文字列リテラルではうまく比較させられなかったので
+ERROR_OPTION="-s"
+
+
+# -sオプションが指定されていないかをチェック
+# $0はコマンドそのもの、$1~が引数
+# 後々実際にadbコマンドを1端末ずつ実行する時に使用する(かもしれない)ので、全引数をひとつの変数に入れておく
+
+ALL_ARGS=""
+
+for (( loop_num = 1; loop_num <= $ARG_NUM; loop_num++ )); do 
+
+  # loop_num個目の引数を出力 (eval = 引数に与えられたものを評価後に連結して実行するコマンド))
+  # $10以上は${10}としないとアクセスできないので、毎回{}を追加している。
+  #eval echo "\${"$loop_num"}"
+
+  # ただのeval echo なら\${"$loop_num"}"で大丈夫だったが、実行結果を変数に入れようとしたらそれだと
+  #  ${"$loop_num"}: bad substitution と言われてしまったので{は個別に""で囲ってやっている。
+  arg=`eval echo "\$""{"$loop_num"}"`
+  #echo $arg
+
+  if [ "$arg" = "$ERROR_OPTION" ]; then
+    # -sオプションが渡されていたら
+    # 非対応なので異常終了させる。
+    echo "-sオプションを含んだコマンドは実行できません。"
+    exit 1
+  else
+  # 後々実際にadbコマンドを1端末ずつ実行する時に使用する(かもしれない)ので、全引数をひとつの変数に入れておく
+  ALL_ARGS+=" ${arg}"
+  #echo $ALL_ARGS
+  fi
+
+done
+
+
+# オリジナルコマンド adb2 show
+# 接続されている端末のシリアル番号と機種名を一覧表示する
+# 本家のadbにはshowコマンドはないのでOK
+
+ARG_SHOW_COMMAND="show"
+if [ "$1" = "$ARG_SHOW_COMMAND" ]; then
+  # 接続されている端末一覧を表示
+  (
+  # IFS=$'\n'; → 1行ずつ取得するためのオプション。
+  # これを設定しないと空白文字も区切り扱いになって「emulator-5554」と「device」でそれぞれ1回ずつ
+  # forループが実行される様になってしまう。
+
+  # for文の中でさらに空白区切りを使用するので、戻すために取っておく。
+  IFS_BACKUP="$IFS"
+  IFS=$'\n'
+  
+
+  for command_result in `adb devices`
+  do
+    (
+    #echo $command_result
+
+    # IFSを元に戻す
+    IFS="$IFS_BACKUP"
+
+    # 空白区切りで区切って配列に入れて、ひとつめを取得
+    array=(`echo $command_result`)
+    device_serial_id=${array[0]}
+    #echo $device_serial_id
+    
+
+    # adb devices の出力結果の」1行目はList of devices attached なので、$device_serial_id=Listは除外
+    EXCLUDE_ID="List"
+
+    if [ "$device_serial_id" != "$EXCLUDE_ID" ];then
+      model_name=`adb -s $device_serial_id shell getprop ro.product.model`
+      echo "$device_serial_id  $model_name"
+    fi
+    )
+  done
+  )
+  
+  # showコマンドの時はこれで終了
+  exit 0
+fi
+
+
+
+# それ以外のコマンドの時
+# adb devicesを実行して、接続されているデバイスを取得して1台ずつ実行する
+# deviceのserial idは各行の1つ目
+
+
+(
+# IFS=$'\n'; → 1行ずつ取得するためのオプション。
+# これを設定しないと空白文字も区切り扱いになって「emulator-5554」と「device」でそれぞれ1回ずつ
+# forループが実行される様になってしまう。
+
+# for文の中でさらに空白区切りを使用するので、戻すために取っておく。
+IFS_BACKUP="$IFS"
+IFS=$'\n'
+for command_result in `adb devices`
+do
+  (
+  #echo $command_result
+
+  # IFSを元に戻す
+  IFS="$IFS_BACKUP"
+
+  # 空白区切りで区切って配列に入れて、ひとつめを取得
+  array=(`echo $command_result`)
+  device_serial_id=${array[0]}
+  #echo $device_serial_id
+    
+
+  # adb devices の出力結果の」1行目はList of devices attached なので、$device_serial_id=Listは除外
+  EXCLUDE_ID="List"
+
+  if [ "$device_serial_id" != "$EXCLUDE_ID" ];then
+    model_name=`adb -s $device_serial_id shell getprop ro.product.model`
+    
+    # 見ずらいので頭に改行を入れる
+    echo -e "\n実行対象の機種名"
+    adb -s $device_serial_id shell getprop ro.product.model
+    echo "実行コマンド"
+    echo "adb -s $device_serial_id ${ALL_ARGS}"
+    adb -s $device_serial_id ${ALL_ARGS}
+    # 見ずらいので末尾にも改行を入れる
+    echo ""
+  fi
+  )
+done
+)
