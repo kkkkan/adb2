@@ -4,6 +4,10 @@
 # 動作確認環境
 # OS : macOS 12.2.1 (21D62)
 # チップ : Apple M1
+# zsh バージョン : zsh 5.8 (x86_64-apple-darwin21.0)
+# bash バージョン : 
+# GNU bash, version 3.2.57(1)-release (arm64-apple-darwin21)
+# Copyright (C) 2007 Free Software Foundation, Inc.
 
 # 引数の数を変数に入れておく
 ARG_NUM=$#
